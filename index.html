@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor monedas</title>
+</head>
+
+<body>
+    <h1>Conversor de monedas Nacional</h1>
+    <h2>Pesos CLP</h2>
+    <input type="number" min="0" class="CLP">
+    <h3>Moneda a convertir:</h3>
+
+    <select class="formSelect" id="select">
+        <option class="option1" value="dolar">Dolar</option>
+        <option class="option2" value="euro">Euro</option>
+        <option class="option3" value="uf">UF</option>
+
+    </select>
+
+    <button class="btn">Convertir</button>
+    <h2>Resultado:<span class="resultado"></span> </h2>
+
+
+    <div class="grafica">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <script>
+        async function money() {
+            const mindicador = await fetch("https://mindicador.cl/api/")
+            const data = await res.json()
+            console.log(data)
+        }
+
+        const input = document.querySelector('input')
+        const option1 = document.querySelector('.option1')
+        const option2 = document.querySelector('.option2')
+        const option3 = document.querySelector('.option3')
+        const btn = document.querySelector('.btn')
+        const select = document.querySelector('#select')
+        const resultado = document.querySelector('.resultado')
+
+        async function getData() {
+            try {
+                const res = await fetch('https://mindicador.cl/api')
+                const data = await res.json();
+                return data;
+            } catch (error) {
+                console.log('Error de datos')
+            }
+        }
+
+        btn.addEventListener('click', async () => {
+            const data = await getData();
+            const nameSelect = select.value;
+            const valueInput = input.value
+
+
+            if (nameSelect == 'dolar') {
+                const dolarValue = data.dolar.valor
+                const total = Number(dolarValue) * Number(valueInput)
+                resultado.innerHTML = total
+            }
+
+            else if (nameSelect == 'euro') {
+                const euroValue = data.euro.valor
+                const total = Number(euroValue) * Number(valueInput)
+                resultado.innerHTML = total
+            }
+            else if (nameSelect == 'uf') {
+                const ufValue = data.uf.valor
+                const total = Number(ufValue) * Number(valueInput)
+                resultado.innerHTML = total
+            }
+            graficoValores(nameSelect);
+        }
+        )
+
+        async function getDataDay(tipo_indicador, fecha) {
+            try {
+                const res = await fetch('https://mindicador.cl/api/' + tipo_indicador + '/' + fecha)
+                const data = await res.json();
+                return data.serie[0]?.valor;
+            } catch (error) {
+                console.log('Error de datos')
+            }
+        }
+        const dataset = {}
+        var chart = null
+        const graficoValores = async (nameSelect) => {
+
+            for (let index = 0; index < 10; index++) {
+                const hoy = new Date()
+                const nueva_fecha = new Date(hoy.setDate(hoy.getDate() - index))
+
+                const fecha_format = `${nueva_fecha.getDate()}-${Number(nueva_fecha.getMonth()) + 1}-${nueva_fecha.getFullYear()}`
+                const res = await getDataDay(nameSelect, fecha_format)
+
+                dataset[fecha_format] = res
+            }
+
+            renderGrafica(dataset);
+        }
+
+
+        async function renderGrafica(dataset) {
+
+            const data = dataset
+            const config = {
+                type: "line",
+                data: {
+                    labels: Object.keys(dataset),
+                    datasets: [{
+                        data: Object.values(dataset)
+                    }]
+                }
+            };
+            const myChart = document.getElementById("myChart");
+
+            if (chart) { chart.destroy() };
+            chart = new Chart(myChart, config);
+            myChart.style.backgroundColor = "white";
+
+        }
+
+
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+
+</html>
